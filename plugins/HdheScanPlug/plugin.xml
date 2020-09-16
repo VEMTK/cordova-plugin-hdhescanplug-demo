@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="com.hdhes.plug" version="1.0"
+    xmlns="http://apache.org/cordova/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <name>HdheScanPlug</name>
+    <js-module name="HdheScanPlug" src="www/HdheScanPlug.js">
+        <clobbers target="HdheScanPlug" />
+    </js-module>
+    <platform name="android">
+        <config-file parent="/*" target="res/xml/config.xml">
+            <feature name="HdheScanPlug">
+                <param name="android-package" value="com.hdhes.plug.HdheScanPlug" />
+            </feature>
+        </config-file>
+        <config-file parent="/*" target="AndroidManifest.xml"></config-file>
+
+        <source-file src="src/android/HdheScanPlug.java" target-dir="src/com/hdhes/plug/HdheScanPlug" />
+        <source-file src="src/android/ScanUtil.java" target-dir="src/com/hdhes/plug/HdheScanPlug" />
+        <source-file src="src/android/SoundUtil.java" target-dir="src/com/hdhes/plug/HdheScanPlug" />
+
+        <source-file src="src/android/libs/jxl.jar" target-dir="libs" />
+        <source-file src="src/android/libs/ModuleAPI_J.jar" target-dir="libs" />
+        <source-file src="src/android/libs/uhfr_v1.8.jar" target-dir="libs" />
+
+        <!-- arm64 -->
+        <source-file src="src/android/jniLibs/arm64-v8a/libdevapi.so" target-dir="jniLibs/arm64-v8a" />
+        <source-file src="src/android/jniLibs/arm64-v8a/libirdaSerialPort.so" target-dir="jniLibs/arm64-v8a" />
+        <source-file src="src/android/jniLibs/arm64-v8a/libModuleAPIJni.so" target-dir="jniLibs/arm64-v8a" />
+        <source-file src="src/android/jniLibs/arm64-v8a/libSerialPort.so" target-dir="jniLibs/arm64-v8a" />
+
+        <!-- armeabi -->
+        <source-file src="src/android/jniLibs/armeabi/libdevapi.so" target-dir="jniLibs/armeabi" />
+        <source-file src="src/android/jniLibs/armeabi/libirdaSerialPort.so" target-dir="jniLibs/armeabi" />
+        <source-file src="src/android/jniLibs/armeabi/libModuleAPIJni.so" target-dir="jniLibs/armeabi" />
+        <source-file src="src/android/jniLibs/armeabi/libSerialPort.so" target-dir="jniLibs/armeabi" />
+
+        <!-- armeabi-v7a -->
+        <source-file src="src/android/jniLibs/armeabi-v7a/libdevapi.so" target-dir="jniLibs/armeabi-v7a" />
+        <source-file src="src/android/jniLibs/armeabi-v7a/libirdaSerialPort.so" target-dir="jniLibs/armeabi-v7a" />
+        <source-file src="src/android/jniLibs/armeabi-v7a/libModuleAPIJni.so" target-dir="jniLibs/armeabi-v7a" />
+        <source-file src="src/android/jniLibs/armeabi-v7a/libSerialPort.so" target-dir="jniLibs/armeabi-v7a" />
+
+        <!-- raw-->
+        <source-file src="src/android/raw/beep.wav" target-dir="res/raw" />
+        <source-file src="src/android/raw/beep2.wav" target-dir="res/raw" />
+        <source-file src="src/android/raw/beep51.wav" target-dir="res/raw" />
+        <source-file src="src/android/raw/msg.mp3" target-dir="res/raw" />
+        <source-file src="src/android/raw/scan.ogg" target-dir="res/raw" />
+
+    </platform>
+</plugin>

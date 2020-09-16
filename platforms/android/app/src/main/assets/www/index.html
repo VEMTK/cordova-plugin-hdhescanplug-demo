@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <!--
+    Customize this policy to fit your own app's needs. For more guidance, see:
+        https://github.com/apache/cordova-plugin-whitelist/blob/master/README.md#content-security-policy
+    Some notes:
+        * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+        * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+        * Disables use of inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+            * Enable inline JS: add 'unsafe-inline' to default-src
+    -->
+    <!--    <meta http-equiv="Content-Security-Policy"-->
+    <!--          content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *; img-src 'self' data: content:;script-src 'self' https://cdn.jsdelivr.net/npm/vue 'unsafe-eval'">-->
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <link rel="stylesheet" href="css/index.css">
+    <script src="js/vue.js"></script>
+    <title>扫描测试DEMO</title>
+</head>
+
+<body>
+
+
+    <div id="app" class="app">
+        <!--            <h1>Apache Cordova</h1>-->
+        <!--            <div id="deviceready" class="blink">-->
+        <!--                <p class="event listening">Connecting to Device</p>-->
+        <!--                <p class="event received">Device is Ready</p>-->
+        <!--            </div>-->
+
+        <fieldset class="utf">
+            <legend>读操作</legend>
+            <div class="utf_table" id="utf_table">
+                <table border="1" style="width:100%;max-width:100%;table-layout: fixed;">
+                    <tbody>
+                        <tr>
+                            <th>SN</th>
+                            <th width="160">EPC</th>
+                            <th>RSSI</th>
+                            <th>COUNT</th>
+                        </tr>
+                        <tr v-for="(item, index) in dataList" :key="index">
+                            <td>{{index + 1}}</td>
+                            <td>{{item.data}}</td>
+                            <td>{{item.rssi}}</td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="utl_menu_container">
+                <div class="utl_menu_select">
+                    <input name="readType" v-bind:disabled="isMultiDisable" id="multi" v-model="readOption.isMulti"
+                        type="checkbox" value="多标签模式">
+                    <label for="multi">多标签模式</label>
+                    <input name="readType" v-bind:disabled="isTidDisable" id="tid" v-model="readOption.isTid"
+                        type="checkbox" value="TID">
+                    <label for="tid">TID</label>
+                </div>
+                <div class="utl_menu_button">
+                    <button v-on:click="clickInventory">开始存盘</button>
+                    <button v-on:click="stopInventory">停止存盘</button>
+                    <button v-on:click="clearInventory">清空</button>
+                </div>
+            </div>
+        </fieldset>
+
+
+        <fieldset class="write">
+            <legend>写操作</legend>
+            <div class="write_row">
+                <span>选择EPC:</span>
+                <select style="width:120px" v-model="writeOption.selectEpc">
+                    <option v-for="(item,index) in dataList" :key="index" :value="item.data">
+                        {{item.data}}
+                    </option>
+                </select>
+            </div>
+            <div class="write_row">
+                <span>访问密码：</span>
+                <input style="width:70%" v-model="writeOption.writePass" value="00000000">
+            </div>
+            <div class="write_row">
+                <span>读写数据区：</span>
+                <select v-model="writeOption.writeDateType">
+                    <option value="0">RESERVED</option>
+                    <option value="1">EPC</option>
+                    <option value="2">TID</option>
+                    <option value="3" selected>USER</option>
+                </select>
+                <button style="width:60px;font-weight: bold;" v-on:click="readData">读</button>
+                <button style="width:60px;font-weight: bold;" v-on:click="writeData">写数据</button>
+            </div>
+
+            <div class="write_row">
+                <span>起始地址：</span>
+                <input value="0" type="number" v-model="writeOption.writeStartPos" style="width:60px">
+                <span>长度(word)：</span>
+                <input value="1" type="number" v-model="writeOption.writeLength" style="width:60px">
+            </div>
+
+            <div class="write_row">
+                <span>写数据(word hex)</span>
+                <input v-model="writeOption.writeData">
+            </div>
+
+            <div class="write_col">
+                <span v-for="(item, index) in writeResponseList" :key="index">{{item}}</span>
+            </div>
+
+
+        </fieldset>
+
+
+        <fieldset class="setting">
+            <legend>设置</legend>
+
+            <div class="write_row">
+                <span>读功率：</span>
+                <select v-model="settingOption.readPower">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15</option>
+                    <option value="16">16</option>
+                    <option value="17">17</option>
+                    <option value="18">18</option>
+                    <option value="19">19</option>
+                    <option value="20">20</option>
+                    <option value="21">21</option>
+                    <option value="22">22</option>
+                    <option value="23">23</option>
+                    <option value="24">24</option>
+                    <option value="25">25</option>
+                    <option value="26">26</option>
+                    <option value="27">27</option>
+                    <option value="28">28</option>
+                    <option value="29">29</option>
+                    <option value="30">30</option>
+                    <option value="31">31</option>
+                    <option value="32">32</option>
+                    <option value="33" selected>33</option>
+                </select>
+                <span>写功率：</span>
+                <select v-model="settingOption.writePower">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15</option>
+                    <option value="16">16</option>
+                    <option value="17">17</option>
+                    <option value="18">18</option>
+                    <option value="19">19</option>
+                    <option value="20">20</option>
+                    <option value="21">21</option>
+                    <option value="22">22</option>
+                    <option value="23">23</option>
+                    <option value="24">24</option>
+                    <option value="25">25</option>
+                    <option value="26">26</option>
+                    <option value="27">27</option>
+                    <option value="28">28</option>
+                    <option value="29">29</option>
+                    <option value="30">30</option>
+                    <option value="31">31</option>
+                    <option value="32">32</option>
+                    <option value="33" selected>33</option>
+                </select>
+                <button v-on:click="getSettingInfo">获取</button>
+                <button v-on:click="setting">设置</button>
+            </div>
+            <div class="write_row">
+                <span>频率区域:</span>
+                <select v-model="settingOption.powerLocation">
+                    <option value="RG_中国">RG_中国</option>
+                    <option value="RG_美国" selected>RG_美国</option>
+                    <option value="RG_无">RG_无</option>
+                    <option value="RG_韩国">RG_韩国</option>
+                    <option value="RG_欧洲">RG_欧洲</option>
+                    <option value="RG_欧洲2">RG_欧洲2</option>
+                    <option value="RG_欧洲3">RG_欧洲3</option>
+                </select>
+                <button v-on:click="getSettingInfo">获取</button>
+                <button v-on:click="setting">设置</button>
+            </div>
+        </fieldset>
+    </div>
+    <script src="cordova.js"></script>
+
+
+    <script>
+        document.addEventListener('deviceready', onDeviceReady, false);
+        function onDeviceReady() {
+            var app = new Vue({
+                el: '#app',
+                data: {
+                    //isMulti disable
+                    isMultiDisable: false,
+                    //isTid Disable
+                    isTidDisable: false,
+                    //查询参数
+                    readOption: {
+                        isMulti: false,
+                        isTid: false
+                    },
+                    /**扫描结果集*/
+                    dataList: [],
+                    /** 写参数 */
+                    writeOption: {
+                        selectEpc: "",
+                        writeData: "",     //写的数据
+                        writeDateType: 3,  // 0:reserved 1:epc  2:tid  3:user  写数据区
+                        writeLength: 1,   //写的长度
+                        writeStartPos: 0,  //起始地址
+                        writePass: "00000000",     //访问密码
+                    },
+                    writeResponseList: [],
+                    /** 设置的参数 */
+                    settingOption: {
+                        readPower: -1, //读功率
+                        writePower: -1, //写功率
+                        powerLocation: "RG_无", //频率区域
+                    },
+
+                },
+                mounted() {
+                    this.getSettingInfo();
+                    window.addEventListener("listenerData", function (info) {
+                       // alert(info);
+                        var data = app.dataList.find((item) => {
+                            return item.data == info.data;
+                        });
+                        if (!data) {
+                            app.dataList.push(info);
+                        } else {
+                            data.rssi = info.rssi;
+                        }
+                        var utf_table = document.getElementById("utf_table");
+                        utf_table.scrollTop = utf_table.scrollHeight;
+                    }, false);
+
+                },
+                watch: {
+                    'readOption.isMulti': {
+                        handler: function (val) {
+                            if (val) {
+                                this.isTidDisable = true;
+                                this.readOption.isTid = false;
+                            } else {
+                                this.isTidDisable = false;
+                                this.readOption.isTid = false;
+                            }
+                        },
+                    },
+                    'readOption.isTid': {
+                        handler: function (val) {
+                            if (val) {
+                                this.isMultiDisable = true;
+                                this.readOption.isMulti = false;
+                            } else {
+                                this.isMultiDisable = false;
+                                this.readOption.isMulti = false;
+                            }
+                        },
+                    },
+                },
+                methods: {
+                    //开始存盘
+                    clickInventory: function () {
+                        // alert(this.readOption.isMulti);
+                        HdheScanPlug.start({
+                            type: 0, //0:read epc 1:
+                            isMulti: this.readOption.isMulti,
+                            isTid: this.readOption.isTid,
+                            onReadSuccess: function (info) {
+                                //alert(info.data);
+                                var data = app.dataList.find((item) => {
+                                    return item.data == info.data;
+                                });
+                                if (!data) {
+                                    app.dataList.push(info);
+                                } else {
+                                    data.rssi = info.rssi;
+                                }
+                                var utf_table = document.getElementById("utf_table");
+                                utf_table.scrollTop = utf_table.scrollHeight;
+                            },
+                            onReadFail: function () {
+                                alert('扫描失败.');
+                            },
+                        });
+                    },
+                    //停止存盘
+                    stopInventory: function () {
+                        HdheScanPlug.stop();
+                    },
+                    //清空数据
+                    clearInventory: function () {
+                        app.dataList = [];
+                    },
+                    //写操作
+                    writeData: function () {
+                        HdheScanPlug.start({
+                            type: 1, //0:read epc 1:
+                            selectEpc: app.writeOption.selectEpc,     //选择EPC
+                            writeData: app.writeOption.writeData,     //写的数据
+                            writeDateType: app.writeOption.writeDateType,  // 0:reserved 1:epc  2:tid  3:user  写数据区
+                            writeLength: app.writeOption.writeLength,   //写的长度
+                            writeStartPos: app.writeOption.writeStartPos,  //起始地址
+                            writePass: app.writeOption.writePass,     //访问密码
+                            onWriteSuccess: function () {
+                                app.writeResponseList.push("成功:" + app.writeOption.writeData);
+                            },
+                            onWriteFail: function (error) {
+                                app.writeResponseList.push("失败");
+                            },
+                        });
+                    },
+                    //写操作里面的读数据
+                    readData: function () {
+                        HdheScanPlug.start({
+                            type: 4, //0:read epc 1:
+                            selectEpc: app.writeOption.selectEpc,     //选择EPC
+                            writeData: app.writeOption.writeData,     //写的数据
+                            writeDateType: app.writeOption.writeDateType,  // 0:reserved 1:epc  2:tid  3:user  写数据区
+                            writeLength: app.writeOption.writeLength,   //写的长度
+                            writeStartPos: app.writeOption.writeStartPos,  //起始地址
+                            writePass: app.writeOption.writePass,     //访问密码
+                            onWriteReadSuccess: function (info) {
+                                app.writeResponseList.push("成功:" + info);
+                            },
+                            onWriteReadFail: function () {
+                                app.writeResponseList.push("失败");
+                            },
+                        });
+                    },
+                    //设置操作
+                    setting: function () {
+                        HdheScanPlug.start({
+                            type: 2, //0:read epc 1:
+                            setting: {
+                                readPower: app.settingOption.readPower, //读功率
+                                writePower: app.settingOption.writePower, //写功率
+                                powerLocation: app.settingOption.powerLocation, //频率区域
+                            }
+                        });
+                    },
+                    //获取设置信息
+                    getSettingInfo: function () {
+                        setTimeout(function () {
+                            HdheScanPlug.start({
+                                type: 3, //0:read epc 1:
+                                onReadSettingSuccess: function (info) {
+                                    var obj = JSON.parse(info);
+                                    app.settingOption.readPower = obj.readPower;
+                                    app.settingOption.writePower = obj.writePower;
+                                    app.settingOption.powerLocation = obj.freRegion;
+                                }
+                            });
+                        }, 1000);
+                    },
+                }
+            })
+
+
+        }
+
+
+
+
+    </script>
+
+
+    <!--<script src="js/index.js"></script>-->
+</body>
+
+</html>

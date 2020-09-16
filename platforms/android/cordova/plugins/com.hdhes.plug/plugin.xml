@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="com.hdhes.plug" version="1.0"
+    xmlns="http://apache.org/cordova/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <name>HdheScanPlug</name>
+    <js-module name="HdheScanPlug" src="www/HdheScanPlug.js">
+        <clobbers target="cordova.plugins.HdheScanPlug" />
+    </js-module>
+    <platform name="android">
+        <config-file parent="/*" target="res/xml/config.xml">
+            <feature name="HdheScanPlug">
+                <param name="android-package" value="com.hdhes.plug.HdheScanPlug" />
+            </feature>
+        </config-file>
+        <config-file parent="/*" target="AndroidManifest.xml"></config-file>
+        <!-- src/com/hdhes/plug/HdheScanPlug -->
+        <source-file src="src/android/HdheScanPlug.java" target-dir="src/plugin_id" />
+    </platform>
+</plugin>
